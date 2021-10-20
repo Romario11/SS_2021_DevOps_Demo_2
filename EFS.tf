@@ -1,5 +1,6 @@
 
 
+/*
 resource "aws_efs_file_system" "common_file_storage" {
   tags = {
     Name = "Redmine file"
@@ -17,6 +18,8 @@ resource "aws_efs_mount_target" "redmine_target1" {
   subnet_id       = module.vpc.public_subnets[1]
   security_groups = [aws_security_group.main_firewall.id]
 }
+*/
+/*
 
 resource "aws_efs_access_point" "efs_efs_access" {
   file_system_id = aws_efs_file_system.common_file_storage.id
@@ -48,6 +51,7 @@ resource "aws_security_group" "file_store_firewall" {
     Project= "Redmine"
   }
 }
+*/
 
 
 /*

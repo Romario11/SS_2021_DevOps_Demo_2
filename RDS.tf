@@ -6,9 +6,9 @@ resource "aws_db_instance" "redmine_rds_db" {
   engine_version         = "10"
   instance_class         = "db.t3.micro"
   availability_zone      = var.zone
-  name                   = var.db_name
-  username               = var.db_user_name
-  password               = var.db_password
+  name                   = file(var.db_name)
+  username               = file(var.db_user_name)
+  password               = file(var.db_password)
   identifier             = "redmine-db"
   multi_az               = false
   port                   = 5432

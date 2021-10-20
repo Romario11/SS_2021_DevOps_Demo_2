@@ -42,7 +42,7 @@ resource "kubernetes_ingress" "redmine_ingres" {
         path {
           path = "/"
           backend {
-            service_name = "redmine-service"
+            service_name = kubernetes_service.redmine_service.metadata.0.name
             service_port = 80
           }
         }
@@ -50,9 +50,6 @@ resource "kubernetes_ingress" "redmine_ingres" {
     }
   }
 }
-
-
-# Display load balancer hostname (typically present in AWS)
 
 
 
@@ -103,10 +100,15 @@ depends_on = [helm_release.nginx_ingress]
         container {
           image = "romario11/redmine-demo2:40"
           name  = "redmine"
-          //image_pull_policy = "Always"
+
           env {
             name = "REDMINE_SECRET_KEY_BASE"
-            value = var.secret_key_redmine
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.redmine_secrets.metadata.0.name
+                key = "secret_key_session"
+              }
+            }
           }
           env {
             name = "REDMINE_DB_POSTGRES"
@@ -114,19 +116,31 @@ depends_on = [helm_release.nginx_ingress]
           }
           env {
             name = "REDMINE_DB_DATABASE"
-            value = var.db_name
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.redmine_secrets.metadata.0.name
+                key = "db_name"
+              }
+            }
           }
           env {
             name = "REDMINE_DB_USERNAME"
-            value = var.db_user_name
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.redmine_secrets.metadata.0.name
+                key = "db_username"
+              }
+            }
           }
           env {
-
             name = "REDMINE_DB_PASSWORD"
-            value = var.db_password
-
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.redmine_secrets.metadata.0.name
+                key = "db_password"
+              }
+            }
           }
-
          /* volume_mount {
             mount_path = "/usr/src/redmine/files"
             name       = "redmine-storage"
@@ -147,6 +161,12 @@ resource "kubernetes_secret" "redmine_secrets" {
   metadata {
     name = "redmine-secret"
   }
+  data = {
+    db_username = file(var.db_user_name)
+    db_password = file(var.db_password)
+    db_name = file(var.db_name)
+    secret_key_session = file(var.secret_key_redmine)
+  }
 }
 
 output "load_balancer_hostname" {
@@ -156,10 +176,21 @@ output "load_balancer_hostname" {
 resource "null_resource" "install_kubectl_config" {
   provisioner "local-exec" {
     command = "aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)"
-
   }
   depends_on = [helm_release.nginx_ingress]
 }
+
+
+
+
+
+
+
+
+
+
+
+
 //==================================================
 
 /*resource "kubernetes_persistent_volume" "redmine-pv_local" {
