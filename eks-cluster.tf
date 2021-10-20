@@ -2,7 +2,7 @@ module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = local.cluster_name
   cluster_version = "1.20"
-  subnets         = module.vpc.public_subnets
+  subnets         = module.vpc.private_subnets
 
   tags = {
     Project = "redmine"
@@ -23,12 +23,11 @@ module "eks" {
 
   worker_groups = [
     {
-      name                          = "worker-group-2"
+      name                          = "worker-group-1"
       instance_type                 = "t2.medium"
-      additional_userdata           = "echo foo bar"
-      additional_security_group_ids = [aws_security_group.main_firewall.id]
+      additional_security_group_ids = [aws_security_group.worker_group.id,aws_security_group.all_worker_mgmt.id]
       asg_desired_capacity          = 2
-    },
+    }
   ]
 }
 
